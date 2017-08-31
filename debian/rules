@@ -10,8 +10,7 @@ override_dh_clean:
 	dh_clean
 	rm -f MANIFEST geth-exporter-*orig.tar.gz
 	rm -rf dist/
-	rm -rf build/
 
 make-orig-tar:
 	python3 setup.py sdist
-	mv dist/geth-exporter-*.tar.gz geth-exporter-{{VERSION}}.orig.tar.gz
+	mv dist/geth-exporter-*.tar.gz geth-exporter_{{VERSION}}.orig.tar.gz

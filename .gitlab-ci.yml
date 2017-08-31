@@ -4,9 +4,6 @@ stages:
   - build
   - prod
 
-before_script:
-  - env
-
 build:
   stage: build
   script:
@@ -17,17 +14,17 @@ build:
     name: "${CI_COMMIT_REF_NAME}"
     expire_in: 1 day
     paths:
-      - build/geth-exporter_*.dsc
-      - build/geth-exporter_*orig.tar.*
-      - build/geth-exporter_*.deb
-      - build/geth-exporter_*.changes
+      - package/geth-exporter_*.dsc
+      - package/geth-exporter_*orig.tar.*
+      - package/geth-exporter_*.deb
+      - package/geth-exporter_*.changes
 
 deploy_aptly:
   stage: prod
   when: manual
   allow_failure: true
   script:
-    - deploy.sh
+    - ./deploy.sh
   only:
     - tags
   environment:

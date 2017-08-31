@@ -1,0 +1,7 @@
+include README.md
+include coinbase-account-sync.service
+include MANIFEST.in
+include .gitlab-ci.yml
+include coinbase_account_sync/*.py
+include coinbase-account-sync
+include setup.py
