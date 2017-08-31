@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+
+import logging
+import time
+import os
+import yaml
+import sys
+from web3 import Web3, KeepAliveRPCProvider
+from prometheus_client import write_to_textfile
+from prometheus_client.core import REGISTRY, GaugeMetricFamily, CounterMetricFamily
+
+log = logging.getLogger(__name__)
+logging.basicConfig(stream=sys.stdout, level=os.environ.get("LOGLEVEL", "WARNING"))
+
+settings = {}
+
+
+def _settings():
+    global settings
+
+    settings = {
+        'geth_exporter': {
+            'prom_folder': '/var/lib/node_exporter',
+            'interval': 60,
+            'geth_host': 'localhost',
+            'geth_port': 8485,
+            'additional_accounts': [],
+        },
+    }
+    config_file = '/etc/geth-exporter/geth-exporter.yaml'
+    if os.path.isfile(config_file):
+        with open(config_file, 'r') as ymlfile:
+            cfg = yaml.load(ymlfile)
+            for k in settings.keys():
+                if k in cfg.keys():
+                    for j in settings[k]:
+                        if j in cfg[k]:
+                            settings[k][j] = cfg[k][j]
+
+
+class EthereumColletcor:
+    def collect(self):
+        metrics = {
+            'account_balance': GaugeMetricFamily(
+                'account_balance',
+                'Account Balance',
+                labels=['currency', 'account', 'type']
+            ),
+            'geth_current_block': GaugeMetricFamily('geth_block_number', 'The number of the most recent block'),
+            'geth_gas_price_wei': GaugeMetricFamily('geth_gas_price_wei', 'The current gas price in Wei'),
+            'geth_mining': GaugeMetricFamily('geth_mining', 'Boolean mining status'),
+            'geth_hash_rate': GaugeMetricFamily(
+                'geth_hash_rate',
+                'The current number of hashes per second the node is mining with'
+            ),
+            'geth_syncing': GaugeMetricFamily('geth_syncing', 'Boolean syncing status'),
+        }
+
+        web3 = Web3(KeepAliveRPCProvider(
+            host=settings['geth_exporter']['geth_host'],
+            port=settings['geth_exporter']['geth_port']
+        ))
+        if web3:
+            accounts = set(web3.eth.accounts)
+            for additional_account in settings['geth_exporter']['additional_accounts']:
+                accounts.add(additional_account)
+            log.debug('Exporting metrics for the following accounts: {acc}'.format(acc=accounts))
+            for account in accounts:
+                # metric: geth_account_balance
+                metrics['account_balance'].add_metric(
+                    labels=['ETH', account, 'geth'],
+                    value=web3.fromWei(web3.eth.getBalance(account), 'ether')
+                )
+
+            # metric: geth_current_block
+            metrics['geth_current_block'].add_metric(value=web3.eth.blockNumber, labels=[])
+
+            # metric: geth_gas_price_wei
+            metrics['geth_gas_price_wei'].add_metric(value=web3.eth.gasPrice, labels=[])
+
+            # metric: geth_mining
+            # metric: geth_hash_rate
+            if web3.eth.mining:
+                metrics['geth_mining'].add_metric(value=1, labels=[])
+                metrics['geth_hash_rate'].add_metric(value=web3.eth.hashrate, labels=[])
+            else:
+                metrics['geth_mining'].add_metric(value=0, labels=[])
+                metrics['geth_hash_rate'].add_metric(value=0, labels=[])
+
+            # metric: geth_syncing
+            if web3.eth.syncing:
+                metrics['geth_syncing'].add_metric(value=1, labels=[])
+            else:
+                metrics['geth_syncing'].add_metric(value=0, labels=[])
+
+            web3 = None
+
+        for m in metrics.values():
+            yield m
+
+
+if __name__ == '__main__':
+    _settings()
+    log.debug('Loaded settings: {}'.format(settings))
+    REGISTRY.register(EthereumColletcor())
+    while True:
+        e = EthereumColletcor()
+        write_to_textfile('{0}/geth_exporter.prom'.format(settings['geth_exporter']['prom_folder']), e)
+        time.sleep(int(settings['geth_exporter']['interval']))

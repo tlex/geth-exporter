@@ -1,0 +1,6 @@
+geth_exporter:
+  prom_folder: '/var/lib/node_exporter'
+  interval: 60
+  geth_host: 'localhost'
+  geth_port: '8545'
+  additional_accounts: []

@@ -1,0 +1,6 @@
+include README
+include LICENSE
+include geth-exporter.service
+include geth-exporter.yaml
+include geth-exporter
+include setup.py

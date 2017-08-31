@@ -1,0 +1,34 @@
+image: hub.ix.ai/docker/build:master
+
+stages:
+  - build
+  - prod
+
+before_script:
+  - env
+
+build:
+  stage: build
+  script:
+    - ./build.sh
+  only:
+    - tags
+  artifacts:
+    name: "${CI_COMMIT_REF_NAME}"
+    expire_in: 1 day
+    paths:
+      - build/geth-exporter_*.dsc
+      - build/geth-exporter_*orig.tar.*
+      - build/geth-exporter_*.deb
+      - build/geth-exporter_*.changes
+
+deploy_aptly:
+  stage: prod
+  when: manual
+  allow_failure: true
+  script:
+    - deploy.sh
+  only:
+    - tags
+  environment:
+    name: production

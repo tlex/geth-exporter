@@ -1,0 +1,13 @@
+[Unit]
+Description=Prometheus go-Ethereum Exporter
+After=geth.service
+
+[Service]
+EnvironmentFile=/etc/default/geth-exporter
+ExecStartPre=/bin/sleep 10
+ExecStart=/usr/bin/geth-exporter
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

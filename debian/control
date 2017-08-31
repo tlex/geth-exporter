@@ -1,0 +1,15 @@
+Source: geth-exporter
+Section: utils
+Priority: optional
+Maintainer: Alexandru Thomae <alex@thom.ae>
+Build-Depends: debhelper (>=9),
+               dh-python,
+               dh-systemd (>= 1.5),
+X-Python-Version: >= 3.4
+Vcs-Git: ssh://git@gitlab.ix.ai:22222/altcoins/geth-exporter.git
+Vcs-Browser: https://gitlab.ix.ai/altcoins/geth-exporter
+
+Package: geth-exporter
+Architecture: all
+Depends: python3-pip, python3-wheel, python3-setuptools, ${misc:Depends}, ${python3:Depends}
+Description: go-Ethereum exporter for Prometheus

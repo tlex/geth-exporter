@@ -1,0 +1,9 @@
+*.pyc
+*/__pycache__/
+MANIFEST
+build/
+dist/
+.DS_Store
+*.egg-info
+debian/debhelper-build-stamp
+debian/geth-exporter.debhelper.log
