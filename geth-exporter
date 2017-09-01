@@ -105,5 +105,5 @@ if __name__ == '__main__':
     REGISTRY.register(EthereumColletcor())
     while True:
         e = EthereumColletcor()
-        write_to_textfile('{0}/geth_exporter.prom'.format(settings['geth_exporter']['prom_folder']), e)
+        write_to_textfile('{0}/geth-exporter.prom'.format(settings['geth_exporter']['prom_folder']), e)
         time.sleep(int(settings['geth_exporter']['interval']))
