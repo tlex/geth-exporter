@@ -1,4 +1,4 @@
-image: hub.ix.ai/docker/build:master
+image: hub.ix.ai/docker/ubuntu:xenial
 
 stages:
   - build
