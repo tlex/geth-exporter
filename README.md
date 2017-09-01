@@ -72,4 +72,4 @@ geth_mining 0.0
 
 ## Donations
 If you want to support this work, donations in ETH are welcomed.
-### `0x90833394db1b53f08b9d97dab8beff69fcf3ba49`
+*   `0x90833394db1b53f08b9d97dab8beff69fcf3ba49`
