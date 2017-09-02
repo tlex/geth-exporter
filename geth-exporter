@@ -28,14 +28,21 @@ def _settings():
         },
     }
     config_file = '/etc/geth-exporter/geth-exporter.yaml'
+    cfg = {}
     if os.path.isfile(config_file):
         with open(config_file, 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
-            for k in settings.keys():
-                if k in cfg.keys():
-                    for j in settings[k]:
-                        if j in cfg[k]:
-                            settings[k][j] = cfg[k][j]
+    if cfg.get('geth_exporter'):
+        if cfg['geth_exporter'].get('prom_folder'):
+            settings['geth_exporter']['prom_folder'] = cfg['geth_exporter']['prom_folder']
+        if cfg['geth_exporter'].get('interval'):
+            settings['geth_exporter']['interval'] = cfg['geth_exporter']['interval']
+        if cfg['geth_exporter'].get('geth_host'):
+            settings['geth_exporter']['geth_host'] = cfg['geth_exporter']['geth_host']
+        if cfg['geth_exporter'].get('geth_port'):
+            settings['geth_exporter']['geth_port'] = cfg['geth_exporter']['geth_port']
+        if cfg['geth_exporter'].get('additional_accounts'):
+            settings['geth_exporter']['additional_accounts'] = cfg['geth_exporter']['additional_accounts']
 
 
 class EthereumColletcor:
