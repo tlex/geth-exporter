@@ -5,6 +5,7 @@ stages:
   - prod
 
 build:
+  when: manual
   stage: build
   script:
     - ./build.sh

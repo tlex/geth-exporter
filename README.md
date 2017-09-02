@@ -3,9 +3,16 @@ go-Ethereum exporter for Prometheus
 
 ## General
 A go-Ethereum exporter, written in Python3, for Prometheus.
+### URLs
+*   [https://gitlab.ix.ai/altcoins/geth-exporter.git](https://gitlab.ix.ai/altcoins/geth-exporter.git)
+*   [https://gitlab.com/tlex/geth-exporter.git](https://gitlab.com/tlex/geth-exporter.git)
+*   [https://github.com/tlex/geth-exporter.git](https://github.com/tlex/geth-exporter.git)
 
 ## Installation
-Details will follow. For now, you can look at the
+### Manual Installation
+*   Copy the file `geth-exporter` somewhere in your path (for example under `/usr/local/bin`)
+*   If the defaults listed below in the configuration file need changing, create `/etc/geth-exporter/geth-exporter.yaml`
+Alternatively you can build a Debian/Ubuntu package by using the build.sh script.
 
 ## Configuration
 ### `node_exporter` Configuration
