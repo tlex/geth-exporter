@@ -4,6 +4,11 @@ stages:
   - build
   - prod
 
+test:
+  stage: build
+  script:
+    - ./test.sh
+
 build:
   stage: build
   script:

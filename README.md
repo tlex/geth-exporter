@@ -16,9 +16,11 @@ Alternatively you can build a Debian/Ubuntu package by using the build.sh script
 
 ## Configuration
 ### `node_exporter` Configuration
-`geth-exporter` doesn't open a port, rather it uses the `textfile` collector in `node_exporter`. You need to start
-node_exporter with the option `-collectors.enabled textfile` and you need to specify the folder where the metrics are
-located with `-collector.textfile.directory /your/path`
+`geth-exporter` can work in one of two ways:
+*   export the metrics over a HTTP port (default `9305`)
+*   write the metrics to a local folder for the `node_exporter` to collect them using the `textfile` collector. You need
+to start node_exporter with the option `-collectors.enabled textfile` and you need to specify the folder where the
+metrics are located with `-collector.textfile.directory /your/path`. The default path is `/var/lib/node_exporter`
 
 ### `geth` Configuration
 `geth-exporter` uses the HTTP-RPC server in geth. To enable it, you need to start geth with the following options:
@@ -35,11 +37,13 @@ The following environment variables are used by `geth-exporter`:
 The configuration file is located in `/etc/geth-exporter/geth-exporter.yaml`. The following values are accepted:
 ```
 geth_exporter:
-  prom_folder: '/var/lib/node_exporter' # node_exporter textfile folder
-  interval: 60 # polling interval in seconds
   geth_host: 'localhost' # server with the geth HTTP-RPC server
-  geth_port: '8545' # the port of the geth HTTP-RPC
+  geth_port: 8545 # the port of the geth HTTP-RPC
   additional_accounts: []
+  export: 'text' # one of 'text', 'http'
+  prom_folder: '/var/lib/node_exporter' # node_exporter textfile folder, only needed if export is set to 'text'
+  interval: 60 # polling interval in seconds, only needed if export is set to 'text'
+  listen_port: 9305 # only needed if export is set to 'http'
 ```
 
 You can specify additional accounts, that are not located in your geth wallet:
@@ -48,7 +52,7 @@ geth_exporter:
   prom_folder: '/var/lib/node_exporter'
   interval: 60
   geth_host: 'localhost'
-  geth_port: '8545'
+  geth_port: 8545
   additional_accounts:
     - 0xaaaa...
     - 0xbbbb...
