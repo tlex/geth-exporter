@@ -3,4 +3,5 @@ geth_exporter:
   interval: 60
   geth_host: 'localhost'
   geth_port: '8545'
+  enable_accounts: 'on'
   additional_accounts: []

@@ -25,6 +25,7 @@ def _settings():
             'geth_host': 'localhost',
             'geth_port': 8485,
             'additional_accounts': [],
+            'enable_accounts': 'on',
             'export': 'text',
             'listen_port': 9305,
         },
@@ -47,6 +48,8 @@ def _settings():
             settings['geth_exporter']['additional_accounts'] = cfg['geth_exporter']['additional_accounts']
         if cfg['geth_exporter'].get('export') in ['text', 'http']:
             settings['geth_exporter']['export'] = cfg['geth_exporter']['export']
+        if cfg['geth_exporter'].get('enable_accounts') in ['on', 'off']:
+            settings['geth_exporter']['enable_accounts'] = cfg['geth_exporter']['enable_accounts']
         if cfg['geth_exporter'].get('listen_port'):
             settings['geth_exporter']['listen_port'] = cfg['geth_exporter']['listen_port']
 
@@ -54,11 +57,6 @@ def _settings():
 class EthereumCollector:
     def collect(self):
         metrics = {
-            'account_balance': GaugeMetricFamily(
-                'account_balance',
-                'Account Balance',
-                labels=['currency', 'account', 'type']
-            ),
             'geth_current_block': GaugeMetricFamily('geth_block_number', 'The number of the most recent block'),
             'geth_gas_price_wei': GaugeMetricFamily('geth_gas_price_wei', 'The current gas price in Wei'),
             'geth_mining': GaugeMetricFamily('geth_mining', 'Boolean mining status'),
@@ -69,21 +67,31 @@ class EthereumCollector:
             'geth_syncing': GaugeMetricFamily('geth_syncing', 'Boolean syncing status'),
         }
 
+        if settings['geth_exporter']['enable_accounts'] == 'on':
+            metrics.update({
+                'account_balance': GaugeMetricFamily(
+                    'account_balance',
+                    'Account Balance',
+                    labels=['currency', 'account', 'type']
+                ),
+            })
+
         web3 = Web3(KeepAliveRPCProvider(
             host=settings['geth_exporter']['geth_host'],
             port=int(settings['geth_exporter']['geth_port'])
         ))
         if web3:
-            accounts = set(web3.eth.accounts)
-            for additional_account in settings['geth_exporter']['additional_accounts']:
-                accounts.add(additional_account)
-            log.debug('Exporting metrics for the following accounts: {acc}'.format(acc=accounts))
-            for account in accounts:
-                # metric: geth_account_balance
-                metrics['account_balance'].add_metric(
-                    labels=['ETH', account, 'geth'],
-                    value=web3.fromWei(web3.eth.getBalance(account), 'ether')
-                )
+            if settings['geth_exporter']['enable_accounts'] == 'on':
+                accounts = set(web3.eth.accounts)
+                for additional_account in settings['geth_exporter']['additional_accounts']:
+                    accounts.add(additional_account)
+                log.debug('Exporting metrics for the following accounts: {acc}'.format(acc=accounts))
+                for account in accounts:
+                    # metric: geth_account_balance
+                    metrics['account_balance'].add_metric(
+                        labels=['ETH', account, 'geth'],
+                        value=web3.fromWei(web3.eth.getBalance(account), 'ether')
+                    )
 
             # metric: geth_current_block
             metrics['geth_current_block'].add_metric(value=web3.eth.blockNumber, labels=[])

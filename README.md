@@ -39,7 +39,8 @@ The configuration file is located in `/etc/geth-exporter/geth-exporter.yaml`. Th
 geth_exporter:
   geth_host: 'localhost' # server with the geth HTTP-RPC server
   geth_port: 8545 # the port of the geth HTTP-RPC
-  additional_accounts: []
+  enable_accounts: 'on' # one of 'on', 'off' - enable the metrics for accounts
+  additional_accounts: [] # List of additional accounts to export metrics (besides the ones configured in geth)
   export: 'text' # one of 'text', 'http'
   prom_folder: '/var/lib/node_exporter' # node_exporter textfile folder, only needed if export is set to 'text'
   interval: 60 # polling interval in seconds, only needed if export is set to 'text'
