@@ -5,6 +5,7 @@ import time
 import os
 import yaml
 import sys
+import requests
 from web3 import Web3, KeepAliveRPCProvider
 from prometheus_client import write_to_textfile, start_http_server
 from prometheus_client.core import REGISTRY, GaugeMetricFamily, CounterMetricFamily
@@ -66,7 +67,6 @@ class EthereumCollector:
             ),
             'geth_syncing': GaugeMetricFamily('geth_syncing', 'Boolean syncing status'),
         }
-
         if settings['geth_exporter']['enable_accounts'] == 'on':
             metrics.update({
                 'account_balance': GaugeMetricFamily(
@@ -80,6 +80,7 @@ class EthereumCollector:
             host=settings['geth_exporter']['geth_host'],
             port=int(settings['geth_exporter']['geth_port'])
         ))
+
         if web3:
             if settings['geth_exporter']['enable_accounts'] == 'on':
                 accounts = set(web3.eth.accounts)
@@ -88,36 +89,68 @@ class EthereumCollector:
                 log.debug('Exporting metrics for the following accounts: {acc}'.format(acc=accounts))
                 for account in accounts:
                     # metric: geth_account_balance
-                    metrics['account_balance'].add_metric(
-                        labels=['ETH', account, 'geth'],
-                        value=web3.fromWei(web3.eth.getBalance(account), 'ether')
-                    )
+                    try:
+                        metrics['account_balance'].add_metric(
+                            labels=['ETH', account, 'geth'],
+                            value=web3.fromWei(web3.eth.getBalance(account), 'ether')
+                        )
+                    except (requests.exceptions.ConnectionError) as e:
+                        log.warning("Can't connect to geth. The error received follows.")
+                        log.warning(e.message)
 
             # metric: geth_current_block
-            metrics['geth_current_block'].add_metric(value=web3.eth.blockNumber, labels=[])
+            try:
+                metrics['geth_current_block'].add_metric(value=web3.eth.blockNumber, labels=[])
+            except (requests.exceptions.ConnectionError) as e:
+                log.warning("Can't connect to geth. The error received follows.")
+                log.warning(e)
+            except ValueError as e:
+                log.warning("Can't get the value for geth_current_block. The error received follows.")
+                log.warning(e.message)
 
             # metric: geth_gas_price_wei
-            metrics['geth_gas_price_wei'].add_metric(value=web3.eth.gasPrice, labels=[])
+            try:
+                metrics['geth_gas_price_wei'].add_metric(value=web3.eth.gasPrice, labels=[])
+            except (requests.exceptions.ConnectionError) as e:
+                log.warning("Can't connect to geth. The error received follows.")
+                log.warning(e)
+            except ValueError as e:
+                log.warning("Can't get the value for geth_gas_price_wei. The error received follows.")
+                log.warning(e.message)
 
             # metric: geth_mining
             # metric: geth_hash_rate
-            if web3.eth.mining:
-                metrics['geth_mining'].add_metric(value=1, labels=[])
-                metrics['geth_hash_rate'].add_metric(value=web3.eth.hashrate, labels=[])
-            else:
-                metrics['geth_mining'].add_metric(value=0, labels=[])
-                metrics['geth_hash_rate'].add_metric(value=0, labels=[])
+            try:
+                if web3.eth.mining:
+                    metrics['geth_mining'].add_metric(value=1, labels=[])
+                    metrics['geth_hash_rate'].add_metric(value=web3.eth.hashrate, labels=[])
+                else:
+                    metrics['geth_mining'].add_metric(value=0, labels=[])
+                    metrics['geth_hash_rate'].add_metric(value=0, labels=[])
+            except (requests.exceptions.ConnectionError) as e:
+                log.warning("Can't connect to geth. The error received follows.")
+                log.warning(e)
+            except ValueError as e:
+                log.warning("Can't get the value for geth_mining or geth_hash_rate. The error received follows.")
+                log.warning(e.message)
 
             # metric: geth_syncing
-            if web3.eth.syncing:
-                metrics['geth_syncing'].add_metric(value=1, labels=[])
-            else:
-                metrics['geth_syncing'].add_metric(value=0, labels=[])
+            try:
+                if web3.eth.syncing:
+                    metrics['geth_syncing'].add_metric(value=1, labels=[])
+                else:
+                    metrics['geth_syncing'].add_metric(value=0, labels=[])
+            except (requests.exceptions.ConnectionError) as e:
+                log.warning("Can't connect to geth. The error received follows.")
+                log.warning(e)
+            except ValueError as e:
+                log.warning("Can't get the value for geth_syncing. The error received follows.")
+                log.warning(e.message)
 
             web3 = None
 
-        for m in metrics.values():
-            yield m
+            for m in metrics.values():
+                yield m
 
 
 def _collect_to_text():
