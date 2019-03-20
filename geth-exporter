@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import logging
 import time
 import os
@@ -14,6 +15,15 @@ log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=os.environ.get("LOGLEVEL", "WARNING"))
 
 settings = {}
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--host', help='Host address of RPC interface to scrape from.', default=argparse.SUPPRESS)
+parser.add_argument('--port', help='Port of the host.', default=argparse.SUPPRESS)
+parser.add_argument('--interval', help='Scrape interval.', default=argparse.SUPPRESS)
+parser.add_argument('--export-type', help='The output type; choose text or http.', choices=['text', 'http'], default=argparse.SUPPRESS)
+parser.add_argument('--service-port', help="The port on which we'll serve our /metrics endpoint", default=argparse.SUPPRESS)
+parser.add_argument('--prom-folder', help='Defaults to /var/lib/node_exporter.', default=argparse.SUPPRESS)
+args = vars(parser.parse_args())
 
 
 def _settings():
@@ -36,23 +46,19 @@ def _settings():
     if os.path.isfile(config_file):
         with open(config_file, 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
-    if cfg.get('geth_exporter'):
-        if cfg['geth_exporter'].get('prom_folder'):
-            settings['geth_exporter']['prom_folder'] = cfg['geth_exporter']['prom_folder']
-        if cfg['geth_exporter'].get('interval'):
-            settings['geth_exporter']['interval'] = cfg['geth_exporter']['interval']
-        if cfg['geth_exporter'].get('geth_host'):
-            settings['geth_exporter']['geth_host'] = cfg['geth_exporter']['geth_host']
-        if cfg['geth_exporter'].get('geth_port'):
-            settings['geth_exporter']['geth_port'] = cfg['geth_exporter']['geth_port']
-        if cfg['geth_exporter'].get('additional_accounts'):
-            settings['geth_exporter']['additional_accounts'] = cfg['geth_exporter']['additional_accounts']
-        if cfg['geth_exporter'].get('export') in ['text', 'http']:
-            settings['geth_exporter']['export'] = cfg['geth_exporter']['export']
-        if cfg['geth_exporter'].get('enable_accounts') in ['on', 'off']:
-            settings['geth_exporter']['enable_accounts'] = cfg['geth_exporter']['enable_accounts']
-        if cfg['geth_exporter'].get('listen_port'):
-            settings['geth_exporter']['listen_port'] = cfg['geth_exporter']['listen_port']
+            cfg = cfg.get('geth_exporter', {})
+
+    if cfg:
+        for key, value in cfg.items():
+            if key == 'export' and value not in ('text', 'http'):
+                continue
+            if key == 'enable_accounts' and value not in ('on', 'off'):
+                continue
+            settings['geth_exporter'][key] = value
+
+    # CLI flags override defaults and config
+    for key, value in args.items():
+        settings['geth_exporter'][key] = value
 
 
 class EthereumCollector:
