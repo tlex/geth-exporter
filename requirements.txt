@@ -1,5 +1,4 @@
-coinbase>=2.0.6
-records>=0.5.0
-PyMySQL>=0.7.11
-python-dateutil>=2.6.1
-SQLAlchemy>=1.1.13
+prometheus_client>=0.6.0
+requests>=2.21.0
+web3>=4.8.3
+PyYAML>=5.1
