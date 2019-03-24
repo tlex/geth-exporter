@@ -60,6 +60,17 @@ geth_exporter:
     - 0xcccc...
 ```
 
+### Command line arguments
+The command line arguments take priority over the values in the configuration file:
+```
+--host Host address of RPC interface to scrape from.
+--port Port of the host running the RPC interface.
+--interval Scrape interval.
+--export-type The output type; choose text or http.
+--service-port The port on which we'll serve our /metrics endpoint
+--prom-folder Defaults to /var/lib/node_exporter.
+```
+
 ## Example Metric
 ```
 # HELP geth_block_number The number of the most recent block
